@@ -1,0 +1,128 @@
+# ---- Python tomonidan yaratiladigan fayllar ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ---- Virtual muhit (Virtual Environment) ----
+venv/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+pyvenv.cfg
+
+# ---- Ma'lumotlar bazasi va kesh ----
+*.sqlite3
+*.db
+*.sqlite
+*.pdb
+*.log
+*.cache/
+*.bak
+*.tmp
+*.pid
+*.seed
+
+# ---- Jupyter Notebook ----
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# ---- IDE va muharrir fayllari ----
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+*.swp
+*.swo
+*.DS_Store
+*.directory
+*.project
+*.metadata
+*.tmproj
+*.log
+
+# ---- Test va qoplamalar (Coverage) ----
+.coverage
+.coverage.*
+*.cover
+nosetests.xml
+test_results/
+htmlcov/
+.tox/
+.nox/
+
+# ---- Paketlash va tarqatish fayllari ----
+build/
+dist/
+*.egg-info/
+*.dist-info/
+*.whl
+
+# ---- Docker va konteyner fayllari ----
+docker-compose.override.yml
+.env
+*.dockerenv
+Dockerfile
+Dockerfile.dev
+*.dockerfile
+
+# ---- Ansible, Terraform va DevOps fayllari ----
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+*.bak
+
+# ---- NPM va frontend fayllari (Agar frontend ham bo‘lsa) ----
+node_modules/
+package-lock.json
+yarn.lock
+npm-debug.log
+bower_components/
+
+# ---- JetBrains (PyCharm, IntelliJ, WebStorm) ----
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ---- SSH va kalit fayllari (xavfsizlik uchun) ----
+*.pem
+*.key
+*.pub
+*.crt
+*.pfx
+id_rsa
+id_rsa.pub
+
+# ---- Sensitive (maxfiy) ma’lumotlar ----
+secrets.json
+config.json
+.envrc
+.env.local
+*.keyring
+.keychain/
+certs/
+
+# ---- Django va Flask fayllari ----
+*.pot
+*.mo
+*.po
+local_settings.py
+instance/
+config/
+
+# ---- CI/CD va YAML konfiguratsiya fayllari ----
+.circleci/
+.github/
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+appveyor.yml
+
+# ---- System va OS fayllari ----
+Thumbs.db
+.DS_Store
+ehthumbs.db
+ehthumbs_vista.db
