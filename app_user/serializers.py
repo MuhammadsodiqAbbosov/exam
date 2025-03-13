@@ -11,24 +11,14 @@ from .models import Teacher
 
 User = get_user_model()  # Django default user modelini olish
 
+from rest_framework import serializers
+from .models import Teacher  
+
 class TeacherSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
     class Meta:
-        model = User
-        fields = ( 'id', 'name', 'user', 'role', 'created_at', 'updated_at')
+        model = Teacher
+        fields = ['id', 'name']  # Faqat mavjud maydonlarni yozish kerak
 
-    def create(self, validated_data):
-        role = validated_data.pop("role", None)  # Role ni ajratib olish
-        user = User.objects.create_user(**validated_data)  # User yaratish
-        if role:
-            user.role = role  # Role ni 
-            if user.role == 'admin': 
-                user.is_staff = True
-                user.is_superuser = True
-
-            user.save()
-        return user
 
 
 

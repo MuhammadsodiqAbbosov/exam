@@ -13,23 +13,31 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied
+from .models import CustomUser
+from .serializers import TeacherSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-class CreateTeacherView(APIView):
+class IsAdminUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_staff
+
+class CreateTeacherView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = TeacherSerializer
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
 
-    def post(self, request):
-        serializer = TeacherSerializer(data=request.data)
-        if serializer.is_valid():
-            teacher = serializer.save()
-            return Response({"message": "Teacher created successfully!", "data": TeacherSerializer(teacher).data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            raise PermissionDenied("Sizda ushbu amalni bajarish uchun ruxsat yo'q.")
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({"message": "O'qituvchi muvaffaqiyatli yaratildi", "user": TeacherSerializer(user).data})
 
-    def get(self, request):
-        teachers = Teacher.objects.all()
-        if not teachers.exists():
-            return Response({"message": "No teachers found"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = TeacherSerializer(teachers, many=True)
-        return Response(serializer.data)
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
