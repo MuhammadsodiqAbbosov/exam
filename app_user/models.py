@@ -32,16 +32,36 @@ class PostModel(models.Model):
 class Teacher(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
+    subject = models.CharField(max_length=255, null=True, blank=True)
+    groups = models.ManyToManyField('Group', related_name='teachers')
 
     def __str__(self):
         return self.name
     
+class Student(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    age = models.IntegerField()
+    grade = models.CharField(max_length=50)  # O'quvchining sinfi (masalan, "10-A")
+
+    def __str__(self):
+        return self.name
 
     
 
+class Group(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
 
+class TeacherGroup(models.Model):
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.teacher.name} - {self.group.name}"
 
 
 User = get_user_model()
