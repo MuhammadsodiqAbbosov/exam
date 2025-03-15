@@ -28,15 +28,6 @@ class PostModel(models.Model):
 
     def __str__(self):
         return self.title
-
-class Teacher(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    subject = models.CharField(max_length=255, null=True, blank=True)
-    groups = models.ManyToManyField('Group', related_name='teachers')
-
-    def __str__(self):
-        return self.name
     
 class Student(models.Model):
     id = models.AutoField(primary_key=True)
@@ -55,6 +46,14 @@ class Group(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+class Teacher(models.Model):
+    name = models.CharField(max_length=100)
+    groups = models.ManyToManyField(Group, related_name='teachers')
+
+    def __str__(self):
+        return self.name
 
 class TeacherGroup(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
@@ -62,6 +61,16 @@ class TeacherGroup(models.Model):
 
     def __str__(self):
         return f"{self.teacher.name} - {self.group.name}"
+    
+
+class Lesson(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    groups = models.ManyToManyField(Group, related_name='lessons')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='lessons')
+
+    def __str__(self):
+        return self.title
 
 
 User = get_user_model()

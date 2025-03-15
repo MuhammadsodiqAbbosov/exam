@@ -29,6 +29,7 @@ from app_user.models import TeacherGroup
 from rest_framework import serializers
 from .models import Teacher
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import Teacher, Lesson
 
 User = get_user_model()
 
@@ -82,9 +83,15 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    lessons = serializers.SerializerMethodField()
+
     class Meta:
         model = Group
-        fields = ['id', 'name', 'created_at']
+        fields = ['id', 'name', 'lessons']
+
+    def get_lessons(self, obj):
+        lessons = obj.lessons.all()  # Ushbu groupdagi barcha lesson larni olish
+        return LessonSerializer(lessons, many=True).data
 
 
 class TeacherGroupSerializer(serializers.ModelSerializer):
@@ -94,3 +101,14 @@ class TeacherGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherGroup
         fields = ['id', 'teacher', 'teacher_name', 'group', 'group_name']
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ['id', 'title', 'content', 'groups', 'teacher']
+
+    def create(self, validated_data):
+        groups_data = validated_data.pop('groups', [])
+        lesson = Lesson.objects.create(**validated_data)
+        lesson.groups.set(groups_data)  # Lessonni tanlangan gruppalarga bog'lash
+        return lesson

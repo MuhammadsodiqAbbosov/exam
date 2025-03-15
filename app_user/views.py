@@ -51,7 +51,7 @@ from .models import Group
 from rest_framework import status
 from rest_framework.response import Response
 from app_user.models import TeacherGroup
-from .serializers import TeacherGroupSerializer
+from .serializers import TeacherGroupSerializer, LessonSerializer
 
 
 class IsAdminUser(permissions.BasePermission):
@@ -194,3 +194,31 @@ class TeacherGroupCreateView(generics.CreateAPIView):
 class TeacherGroupListView(generics.ListAPIView):
     queryset = TeacherGroup.objects.all()
     serializer_class = TeacherGroupSerializer
+
+class CreateLessonView(generics.CreateAPIView):
+    serializer_class = LessonSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        teacher = self.request.user  # Foydalanuvchi teacher bo‘lishi kerak
+        groups = serializer.validated_data.get('groups', [])
+
+        # Teacher faqat o‘ziga tegishli bo‘lgan guruhlar uchun dars yarata olishi kerak
+        allowed_groups = teacher.groups.all()
+
+        if not set(groups).issubset(set(allowed_groups)):
+            return Response({"error": "Siz faqat o‘z guruhlaringiz uchun dars yaratishingiz mumkin."}, status=403)
+
+        serializer.save(teacher=teacher)
+
+class TeacherListView(generics.ListAPIView):
+    queryset = Teacher.objects.all()
+    serializer_class = TeacherSerializer
+
+class StudentListView(generics.ListAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+
+class GroupListView(generics.ListAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
