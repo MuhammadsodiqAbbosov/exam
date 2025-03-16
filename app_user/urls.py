@@ -1,25 +1,7 @@
 from django.urls import path
-from app_user.views import CreateTeacherView
+from .views import StudentListView, GroupListView, LessonListAPIView, LessonGroupListAPIView, AddLessonToGroupAPIView, TeacherListView, CreateLessonAPIView, TeacherGroupCreateView, TeacherGroupsView, AddTeacherToGroupView, CreateGroupView, CreateStudentView, CreateTeacherView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.urls import path
-from app_user.views import CreateTeacherView, CreateStudentView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.urls import path
-from app_user.views import CreateTeacherView, CreateStudentView, CreateGroupView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.urls import path
-from app_user.views import CreateTeacherView, CreateStudentView, CreateGroupView, AddTeacherToGroupView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.urls import path
-from app_user.views import CreateTeacherView, CreateStudentView, CreateGroupView, AddTeacherToGroupView, TeacherGroupsView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.urls import path
-from app_user.views import CreateTeacherView, CreateStudentView, CreateGroupView, AddTeacherToGroupView, TeacherGroupsView, TeacherGroupListView, TeacherGroupCreateView, CreateLessonView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.urls import path
-from app_user.views import CreateTeacherView, CreateStudentView, CreateGroupView, AddTeacherToGroupView, TeacherGroupsView, TeacherGroupListView, TeacherGroupCreateView, CreateLessonView, TeacherListView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import StudentListView, GroupListView, LessonListAPIView, LessonGroupListAPIView, AddLessonToGroupAPIView, TeacherListView, CreateLessonAPIView
+
 
 app_name = "app_user"
 
@@ -30,7 +12,6 @@ urlpatterns = [
     path('create-group/', CreateGroupView.as_view(), name='create-group'),
     path('add-teacher-to-group/', AddTeacherToGroupView.as_view(), name='add-teacher-to-group'),
     path('teacher-groups/<int:teacher_id>/', TeacherGroupsView.as_view(), name='teacher-groups'),
-    path('teacher-group/', TeacherGroupListView.as_view(), name='teacher-group-list'),
     path('teacher-group/create/', TeacherGroupCreateView.as_view(), name='teacher-group-create'),
     path('create-lesson/', CreateLessonAPIView.as_view(), name='create-lesson'),
     path('teacher/', TeacherListView.as_view(), name='teacher-list'),

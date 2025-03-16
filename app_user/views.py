@@ -1,57 +1,21 @@
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from .models import Teacher
-from .serializers import TeacherSerializer
+from rest_framework import status, generics, permissions
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CustomTokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import CustomUser
-from .serializers import TeacherSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Teacher, Student
-from .serializers import TeacherSerializer, StudentSerializer
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import CustomUser
-from .serializers import TeacherSerializer
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status
-from .models import Teacher
-from .serializers import TeacherSerializer
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CustomTokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import CustomUser
-from .serializers import TeacherSerializer
-from .serializers import GroupSerializer
-from .models import Group, Lesson
-from rest_framework import status
-from rest_framework.response import Response
-from app_user.models import TeacherGroup
-from .serializers import TeacherGroupSerializer, LessonSerializer
+from .serializers import TeacherSerializer, CustomTokenObtainPairSerializer, TeacherSerializer, StudentSerializer, GroupSerializer, TeacherGroupSerializer, LessonSerializer
+from app_user.models import CustomUser, Student, Group, Teacher, TeacherGroup, Lesson 
+
 
 
 class IsAdminUser(permissions.BasePermission):
@@ -159,7 +123,7 @@ class AddTeacherToGroupView(APIView):
             teacher = Teacher.objects.get(id=teacher_id)
             groups = Group.objects.filter(id__in=group_ids)
 
-            teacher.groups.add(*groups)  # Teacher ga bir nechta group qo‘shish
+            teacher.groups.add(*groups)
             teacher.save()
 
             return Response(
@@ -200,10 +164,9 @@ class CreateLessonView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        teacher = self.request.user  # Foydalanuvchi teacher bo‘lishi kerak
+        teacher = self.request.user
         groups = serializer.validated_data.get('groups', [])
 
-        # Teacher faqat o‘ziga tegishli bo‘lgan guruhlar uchun dars yarata olishi kerak
         allowed_groups = teacher.groups.all()
 
         if not set(groups).issubset(set(allowed_groups)):
@@ -222,10 +185,9 @@ class CreateLessonAPIView(APIView):
             return Response({"error": "title, content va teacher kerak!"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            teacher = Teacher.objects.get(id=teacher_id)  # O'qituvchini olish
-            lesson = Lesson.objects.create(title=title, content=content, teacher=teacher)  # Lesson yaratish
+            teacher = Teacher.objects.get(id=teacher_id)
+            lesson = Lesson.objects.create(title=title, content=content, teacher=teacher)
 
-            # Guruhlarni qo'shish
             for group_id in group_ids:
                 try:
                     group = Group.objects.get(id=group_id)
@@ -233,7 +195,7 @@ class CreateLessonAPIView(APIView):
                 except Group.DoesNotExist:
                     return Response({"error": f"Group ID {group_id} topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
 
-            lesson.save()  # Lessonni saqlash
+            lesson.save()
 
             return Response({
                 "id": lesson.id,
@@ -265,21 +227,21 @@ class LessonListAPIView(generics.ListAPIView):
 
 class AddLessonToGroupAPIView(APIView):
     def post(self, request):
-        lesson_id = request.data.get("lesson_id")  # Lesson ID
-        group_name = request.data.get("group_name")  # Group nomi
+        lesson_id = request.data.get("lesson_id")
+        group_name = request.data.get("group_name")
 
         if not lesson_id or not group_name:
             return Response({"error": "lesson_id va group_name kerak!"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            lesson = Lesson.objects.get(id=lesson_id)  # Lessonni olish
-            group = Group.objects.get(name=group_name)  # Group'ni olish
+            lesson = Lesson.objects.get(id=lesson_id)
+            group = Group.objects.get(name=group_name)
         except Lesson.DoesNotExist:
             return Response({"error": "Bunday Lesson topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
         except Group.DoesNotExist:
             return Response({"error": "Bunday Group topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
 
-        lesson.groups.add(group)  # Lessonni guruhga qo‘shish
+        lesson.groups.add(group)
         return Response({"message": f"Lesson '{lesson.title}' guruh '{group.name}'ga qo‘shildi!"}, status=status.HTTP_200_OK)
 
 
