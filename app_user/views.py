@@ -47,7 +47,7 @@ from rest_framework.exceptions import PermissionDenied
 from .models import CustomUser
 from .serializers import TeacherSerializer
 from .serializers import GroupSerializer
-from .models import Group
+from .models import Group, Lesson
 from rest_framework import status
 from rest_framework.response import Response
 from app_user.models import TeacherGroup
@@ -211,6 +211,41 @@ class CreateLessonView(generics.CreateAPIView):
 
         serializer.save(teacher=teacher)
 
+class CreateLessonAPIView(APIView):
+    def post(self, request):
+        title = request.data.get("title")
+        content = request.data.get("content")
+        group_ids = request.data.get("groups", [])
+        teacher_id = request.data.get("teacher")
+
+        if not title or not content or not teacher_id:
+            return Response({"error": "title, content va teacher kerak!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            teacher = Teacher.objects.get(id=teacher_id)  # O'qituvchini olish
+            lesson = Lesson.objects.create(title=title, content=content, teacher=teacher)  # Lesson yaratish
+
+            # Guruhlarni qo'shish
+            for group_id in group_ids:
+                try:
+                    group = Group.objects.get(id=group_id)
+                    lesson.groups.add(group)
+                except Group.DoesNotExist:
+                    return Response({"error": f"Group ID {group_id} topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
+
+            lesson.save()  # Lessonni saqlash
+
+            return Response({
+                "id": lesson.id,
+                "title": lesson.title,
+                "content": lesson.content,
+                "groups": [group.id for group in lesson.groups.all()],
+                "teacher": lesson.teacher.id
+            }, status=status.HTTP_201_CREATED)
+
+        except Teacher.DoesNotExist:
+            return Response({"error": "Bunday teacher mavjud emas!"}, status=status.HTTP_404_NOT_FOUND)
+
 class TeacherListView(generics.ListAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
@@ -222,3 +257,34 @@ class StudentListView(generics.ListAPIView):
 class GroupListView(generics.ListAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+
+
+class LessonListAPIView(generics.ListAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+
+class AddLessonToGroupAPIView(APIView):
+    def post(self, request):
+        lesson_id = request.data.get("lesson_id")  # Lesson ID
+        group_name = request.data.get("group_name")  # Group nomi
+
+        if not lesson_id or not group_name:
+            return Response({"error": "lesson_id va group_name kerak!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            lesson = Lesson.objects.get(id=lesson_id)  # Lessonni olish
+            group = Group.objects.get(name=group_name)  # Group'ni olish
+        except Lesson.DoesNotExist:
+            return Response({"error": "Bunday Lesson topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
+        except Group.DoesNotExist:
+            return Response({"error": "Bunday Group topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
+
+        lesson.groups.add(group)  # Lessonni guruhga qo‘shish
+        return Response({"message": f"Lesson '{lesson.title}' guruh '{group.name}'ga qo‘shildi!"}, status=status.HTTP_200_OK)
+
+
+class LessonGroupListAPIView(generics.ListAPIView):
+    serializer_class = LessonSerializer
+
+    def get_queryset(self):
+        return Lesson.objects.filter(groups__isnull=False).distinct()
