@@ -32,17 +32,15 @@ class PostModel(models.Model):
 class Student(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    age = models.IntegerField()
-    grade = models.CharField(max_length=50)  # O'quvchining sinfi (masalan, "10-A")
-
-    def __str__(self):
-        return self.name
+    age = models.IntegerField(default=18)
+    grade = models.CharField(max_length=50) 
 
     
 
 class Group(models.Model):
     name = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    students = models.ManyToManyField(Student, related_name="groups")
 
     def __str__(self):
         return self.name

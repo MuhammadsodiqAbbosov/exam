@@ -43,19 +43,14 @@ class TeacherSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
-        fields = ('id', 'name', 'age', 'grade')
-
+        fields = ['id', 'name', 'age']
 
 class GroupSerializer(serializers.ModelSerializer):
-    lessons = serializers.SerializerMethodField()
+    students = StudentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'lessons']
-
-    def get_lessons(self, obj):
-        lessons = obj.lessons.all()
-        return LessonSerializer(lessons, many=True).data
+        fields = ['id', 'name', 'students']
 
 
 class TeacherGroupSerializer(serializers.ModelSerializer):

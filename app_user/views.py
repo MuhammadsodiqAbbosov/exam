@@ -15,6 +15,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 from .serializers import TeacherSerializer, CustomTokenObtainPairSerializer, TeacherSerializer, StudentSerializer, GroupSerializer, TeacherGroupSerializer, LessonSerializer
 from app_user.models import CustomUser, Student, Group, Teacher, TeacherGroup, Lesson 
+import json
+from rest_framework.generics import ListAPIView
+
 
 
 
@@ -68,7 +71,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception:
-            return Response({"error": "Login yoki parol noto‘g‘ri!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Login yoki parol notogri!"}, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
     
@@ -170,7 +173,7 @@ class CreateLessonView(generics.CreateAPIView):
         allowed_groups = teacher.groups.all()
 
         if not set(groups).issubset(set(allowed_groups)):
-            return Response({"error": "Siz faqat o‘z guruhlaringiz uchun dars yaratishingiz mumkin."}, status=403)
+            return Response({"error": "Siz faqat oz guruhlaringiz uchun dars yaratishingiz mumkin."}, status=403)
 
         serializer.save(teacher=teacher)
 
@@ -242,7 +245,7 @@ class AddLessonToGroupAPIView(APIView):
             return Response({"error": "Bunday Group topilmadi!"}, status=status.HTTP_404_NOT_FOUND)
 
         lesson.groups.add(group)
-        return Response({"message": f"Lesson '{lesson.title}' guruh '{group.name}'ga qo‘shildi!"}, status=status.HTTP_200_OK)
+        return Response({"message": f"Lesson '{lesson.title}' guruh '{group.name}'ga qoshildi!"}, status=status.HTTP_200_OK)
 
 
 class LessonGroupListAPIView(generics.ListAPIView):
@@ -250,3 +253,107 @@ class LessonGroupListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Lesson.objects.filter(groups__isnull=False).distinct()
+    
+class DeleteTeacherAPIView(APIView):
+    def delete(self, request):
+        try:
+            data = json.loads(request.body)
+            teacher_id = data.get("id")
+
+            teacher = Teacher.objects.get(id=teacher_id)
+
+            groups = teacher.groups.all()
+            for group in groups:
+                group.teacher = None
+                group.save()
+
+            teacher.delete()
+            return Response({"message": f"Teacher {teacher_id} ochirildi!"}, status=status.HTTP_200_OK)
+
+        except Teacher.DoesNotExist:
+            return Response({"error": "Bunday teacher mavjud emas!"}, status=status.HTTP_404_NOT_FOUND)
+        except json.JSONDecodeError:
+            return Response({"error": "Notogri JSON format!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+class DeleteStudentAPIView(APIView):
+    def delete(self, request):
+        try:
+            data = json.loads(request.body)
+            student_id = data.get("id")
+
+            student = Student.objects.get(id=student_id)
+            student.delete()
+            return Response({"message": f"Student {student_id} ochirildi!"}, status=status.HTTP_200_OK)
+
+        except Student.DoesNotExist:
+            return Response({"error": "Bunday student mavjud emas!"}, status=status.HTTP_404_NOT_FOUND)
+        except json.JSONDecodeError:
+            return Response({"error": "Notogri JSON format!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+class DeleteGroupAPIView(APIView):
+    def delete(self, request):
+        try:
+            data = json.loads(request.body)
+            group_id = data.get("id")
+
+            group = Group.objects.get(id=group_id)
+            group.delete()
+            return Response({"message": f"Group {group_id} ochirildi!"}, status=status.HTTP_200_OK)
+
+        except Group.DoesNotExist:
+            return Response({"error": "Bunday group mavjud emas!"}, status=status.HTTP_404_NOT_FOUND)
+        except json.JSONDecodeError:
+            return Response({"error": "Notogri JSON format!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+class DeleteLessonAPIView(APIView):
+    def delete(self, request):
+        try:
+            data = json.loads(request.body)
+            lesson_id = data.get("id")
+
+            lesson = Lesson.objects.get(id=lesson_id)
+            lesson.delete()
+            return Response({"message": f"Lesson {lesson_id} ochirildi!"}, status=status.HTTP_200_OK)
+
+        except Lesson.DoesNotExist:
+            return Response({"error": "Bunday lesson mavjud emas!"}, status=status.HTTP_404_NOT_FOUND)
+        except json.JSONDecodeError:
+            return Response({"error": "Notogri JSON format!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+class GroupListAPIView(ListAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+        
+
+class AddStudentToGroupAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        group_id = request.data.get("group_id")
+        student_id = request.data.get("student_id")
+
+        if not group_id or not student_id:
+            return Response({"error": "group_id va student_id kerak"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            group = Group.objects.get(id=group_id)
+            student = Student.objects.get(id=student_id)
+            group.students.add(student)
+            return Response({"message": "Student groupga qoshildi"}, status=status.HTTP_200_OK)
+        except Group.DoesNotExist:
+            return Response({"error": "Group topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+        except Student.DoesNotExist:
+            return Response({"error": "Student topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+
+class RemoveStudentFromGroupAPIView(APIView):
+    def post(self, request):
+        group_id = request.data.get("group_id")
+        student_id = request.data.get("student_id")
+
+        try:
+            group = Group.objects.get(id=group_id)
+            student = Student.objects.get(id=student_id)
+            group.students.remove(student)
+            return Response({"message": "Student groupdan ochirildi"}, status=status.HTTP_200_OK)
+        except Group.DoesNotExist:
+            return Response({"error": "Group topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+        except Student.DoesNotExist:
+            return Response({"error": "Student topilmadi"}, status=status.HTTP_404_NOT_FOUND)
